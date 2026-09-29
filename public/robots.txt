@@ -1,6 +1,5 @@
 # https://iznik.dev
 User-agent: *
 Allow: /
-Disallow: /__grok/
 
 Sitemap: https://iznik.dev/sitemap.xml

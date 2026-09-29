@@ -23,10 +23,11 @@ const TEMPLATE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 test("injects before </head>", () => {
   const out = injectGrokPwaHead("<html><head><title>x</title></head><body></body></html>");
-  assert.match(out, /rel="manifest"/);
-  assert.match(out, /apple-touch-icon/);
+  assert.doesNotMatch(out, /__grok/);
+  assert.doesNotMatch(out, /rel="manifest"/);
+  assert.doesNotMatch(out, /apple-touch-icon/);
   assert.doesNotMatch(out, /grok-app-builder\/extensions\.js/);
-  assert.ok(out.indexOf("manifest") < out.indexOf("</head>"));
+  assert.ok(out.indexOf("og:title") < out.indexOf("</head>"));
 });
 
 test("does not inject the grok extensions script or project metas", () => {
@@ -376,9 +377,10 @@ test("is idempotent", () => {
   assert.equal(once, twice);
 });
 
-test("uses the app name in the injected title tag", () => {
+test("does not inject platform web-app title tags", () => {
   const out = injectGrokPwaHead("<html><head></head></html>", { appName: "Wild Race" });
-  assert.match(out, /apple-mobile-web-app-title" content="Wild Race"/);
+  assert.doesNotMatch(out, /apple-mobile-web-app-title/);
+  assert.doesNotMatch(out, /__grok/);
 });
 
 test("streaming injector handles </head> split across chunks", () => {
@@ -388,8 +390,7 @@ test("streaming injector handles </head> split across chunks", () => {
     ...injector.push("ad><body>hello</body></html>"),
   ];
   const out = Buffer.concat(chunks).toString("utf8");
-  assert.match(out, /rel="manifest"/);
-  assert.ok(out.indexOf("manifest") < out.indexOf("</head>"));
+  assert.doesNotMatch(out, /__grok/);
   assert.match(out, /<body>hello<\/body>/);
   assert.deepEqual(injector.flush(), []);
 });
@@ -405,7 +406,7 @@ test("streaming injector falls back when no </head> is seen", () => {
   const injector = createHeadInjector();
   assert.deepEqual(injector.push("<html><head>"), []);
   const out = Buffer.concat(injector.flush()).toString("utf8");
-  assert.match(out, /rel="manifest"/);
+  assert.doesNotMatch(out, /__grok/);
 });
 
 test("detects install query", () => {
@@ -473,11 +474,10 @@ test("vite config keeps the nitro serverDir wiring", () => {
 
 test("nitro middleware and its bundled assets exist", () => {
   const middleware = readFileSync(join(TEMPLATE_ROOT, "server/middleware/grok-pwa.ts"), "utf8");
-  assert.match(middleware, /install-page\.html\?raw/);
+  assert.doesNotMatch(middleware, /install-page\.html\?raw/);
+  assert.doesNotMatch(middleware, /__grok/);
   assert.match(middleware, /virtual:grok-og-identity/);
   readFileSync(join(TEMPLATE_ROOT, "scripts/install-page.html"));
-  readFileSync(join(TEMPLATE_ROOT, "public/__grok/icon-180.png"));
-  readFileSync(join(TEMPLATE_ROOT, "public/__grok/install/styles.css"));
 });
 
 test("vite plugin bakes og identity as a virtual module", () => {

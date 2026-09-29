@@ -1,0 +1,17 @@
+# İznik
+
+> A remote terminal with a cross-platform GPUI front end. Your SSH, a server on the host, panes that survive a dropped link. Linux, macOS, Windows.
+
+Sessions, tabs and panes live in the server. One SSH channel per host carries every pane. Pane output is the pseudoterminal’s raw bytes, rendered by the application with libghostty-vt. The command line never draws a screen.
+
+## Docs
+
+- [The site, in markdown](https://iznik.dev/index.md): The same account as the homepage, without the page chrome.
+- [Source](https://github.com/koraytaylan/iznik): The server, the client engine, the wire protocol, the GPUI application, the C ABI, and the harness that proves them. MIT license.
+
+## Optional
+
+- [What a host receives](https://iznik.dev/index.md#on-a-host): The files the bootstrap writes, and nothing else.
+- [Snapshot downloads](https://iznik.dev/index.md#snapshot): Linux, macOS and Windows archives from the rolling `develop-snapshot` release.
+- [Commands](https://iznik.dev/index.md#commands): How to run the application, the gates, and the server by itself.
+- [Rust, and the name](https://iznik.dev/index.md#rust): Rust, end to end. `cargo xtask check` is the bar. A release is a list, starting with a six-hour soak. The name pokes Zellij: Moroccan mosaic, Ottoman ceramic.

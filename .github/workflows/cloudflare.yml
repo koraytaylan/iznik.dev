@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -22,6 +22,28 @@ jobs:
         env:
           NITRO_PRESET: cloudflare_module
           VITE_AUTH_ENABLED: "false"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cloudflare-output
+          include-hidden-files: true
+          retention-days: 1
+          path: |
+            .output
+            .wrangler/deploy
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: actions/download-artifact@v8
+        with:
+          name: cloudflare-output
       - uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

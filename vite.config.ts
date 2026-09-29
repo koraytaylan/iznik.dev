@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite";
 import { defineConfig } from "vite";
@@ -180,14 +180,35 @@ export default defineConfig(({ command, isPreview }) => ({
                 name: "iznik",
                 routes: [
                   { pattern: "iznik.dev", custom_domain: true },
+                  // Attached so www can 301 to the apex. The site is not served there.
                   { pattern: "www.iznik.dev", custom_domain: true },
                 ],
+                assets: {
+                  // Otherwise a static file on www is served before the redirect.
+                  run_worker_first: true,
+                },
               },
             },
             // Auto-registers server/middleware/* (the PWA install page +
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.
             serverDir: "./server",
+            hooks: {
+              close() {
+                if (!String(process.env.NITRO_PRESET ?? "").includes("cloudflare")) return;
+                const file = join(process.cwd(), ".output/server/index.mjs");
+                const marker = "if (env.ASSETS && isPublicAssetURL(url.pathname))";
+                const source = readFileSync(file, "utf8");
+                if (source.includes("www-apex-redirect")) return;
+                if (!source.includes(marker)) {
+                  throw new Error("www redirect could not find the Cloudflare asset handler");
+                }
+                // Nitro serves static files before middleware, so www has to leave first.
+                const redirect =
+                  'if (url.hostname === "www.iznik.dev") return new Response(null, { status: 301, headers: { location: "https://iznik.dev" + url.pathname + url.search, "cache-control": "public, max-age=3600" } }); /* www-apex-redirect */\n\t';
+                writeFileSync(file, source.replace(marker, redirect + marker));
+              },
+            },
           }),
         ]
       : []),
